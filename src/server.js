@@ -38,10 +38,7 @@ async function processOpenApiUrls() {
       try {
         logMessage(`Processing OpenAPI URL: ${url}`)
         await portmanTransformation.initialize(url)
-        await portmanTransformation.generateCollection()
-        const tempFile = `./temp-collection-${Date.now()}.json`
-        await portmanTransformation.saveCollection(tempFile)
-        collectionCombiner.addCollection(tempFile)
+        collectionCombiner.addCollection(url)
       } catch (err) {
         logMessage(`ERROR! Failed to process OpenAPI URL ${url}: ${err.message}`)
       }

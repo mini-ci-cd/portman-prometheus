@@ -19,10 +19,11 @@ class PortmanTransformation {
     try {
       // Convert URL to filename-safe string for config
       const configFileName = `${openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')}-portman.conf`
+      const outputFileName = `${openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')}-collection.json`
 
       // Initialize Portman with default options
       const defaultOptions = {
-        output: './collection.json',
+        output: outputFileName,
         portmanConfigFile: configFileName,
         envFile: './.env',
         oaUrl: openApiUrl
