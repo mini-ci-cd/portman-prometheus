@@ -4,3 +4,8 @@ deploy/prometheus-helm/*.yaml
 !deploy/prometheus-helm/*.sample.yaml
 .secrets
 local/**
+tmp/
+.history/
+*collection.json
+*portman.conf
+*openapi.json
