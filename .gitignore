@@ -9,3 +9,4 @@ tmp/
 *collection.json
 *portman.conf
 *openapi.json
+.env
