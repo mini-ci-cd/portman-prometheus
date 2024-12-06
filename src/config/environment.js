@@ -7,6 +7,7 @@ const environment = {
   // Collection configuration
   openApiFile: process.env.OPENAPI_FILE || './openapi.json',
   portmanConfigFile: process.env.PORTMAN_CONFIG_FILE || './portman.json',
+  portmanOpenApiUrls: process.env.PORTMAN_OPENAPI_URLS ? process.env.PORTMAN_OPENAPI_URLS.split(',').map(url => url.trim()) : [],
   collectionFile: process.env.COLLECTION_FILE || './collection.json',
   envFile: process.env.ENVIRONMENT_FILE || '',
   collectionUrl: process.env.COLLECTION_URL || '',

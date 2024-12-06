@@ -3,7 +3,8 @@ const environment = require('./config/environment')
 const metricsRouter = require('./routes/metrics')
 const statusRouter = require('./routes/status')
 const collectionRunner = require('./services/collectionRunner')
-const portmanTrasformation = require('./services/portmanTransformation')
+const portmanTransformation = require('./services/portmanTransformation')
+const collectionCombiner = require('./services/combineCollections')
 const { logMessage } = require('./utils/logger')
 
 const app = express()
@@ -26,42 +27,77 @@ app.get('/health', (req, res) => {
   res.status(200).send('OK')
 })
 
-app.listen(environment.port, async () => {
-  await portmanTrasformation.initialize(
-    environment.openApiFile
-  )
+async function processOpenApiUrls() {
+  const { portmanOpenApiUrls, openApiFile } = environment
+  
+  if (portmanOpenApiUrls.length > 0) {
+    logMessage(`Processing ${portmanOpenApiUrls.length} OpenAPI URLs`)
+    
+    // Process each URL and generate collections
+    for (const url of portmanOpenApiUrls) {
+      try {
+        logMessage(`Processing OpenAPI URL: ${url}`)
+        await portmanTransformation.initialize(url)
+        await portmanTransformation.generateCollection()
+        const tempFile = `./temp-collection-${Date.now()}.json`
+        await portmanTransformation.saveCollection(tempFile)
+        collectionCombiner.addCollection(tempFile)
+      } catch (err) {
+        logMessage(`ERROR! Failed to process OpenAPI URL ${url}: ${err.message}`)
+      }
+    }
 
-  await portmanTrasformation.generateCollection()
-  //await portmanTrasformation.saveCollection('./collection.json')
-
-  const { collectionFile, envFile } = await collectionRunner.fetchConfig(
-    environment.collectionUrl,
-    environment.envUrl,
-    environment.collectionFile,
-    environment.envFile
-  )
-
-  logMessage(`Newman runner started & listening on ${environment.port}`)
-  logMessage(` - Metrics available for scraping at: http://0.0.0.0:${environment.port}${environment.metricsUrlPath}`)
-  if (environment.statusEnabled === 'true') {
-    logMessage(` - Status API endpoint: http://0.0.0.0:${environment.port}/status`)
+    // Combine all collections
+    collectionCombiner.combine('Combined API Collection')
+    collectionCombiner.saveCollection(environment.collectionFile)
+    
+    // Reset for next use
+    collectionCombiner.reset()
+  } else if (openApiFile) {
+    // Process single OpenAPI file as before
+    await portmanTransformation.initialize(openApiFile)
+    await portmanTransformation.generateCollection()
+    await portmanTransformation.saveCollection(environment.collectionFile)
   }
-  logMessage(` - Collection will be run every ${environment.runInterval} seconds`)
-  logMessage(` - Config refresh will be run every ${environment.refreshInterval} seconds`)
+}
 
-  collectionRunner.runCollection(collectionFile, envFile, environment.runIterations, environment.enableBail)
+app.listen(environment.port, async () => {
+  try {
+    await processOpenApiUrls()
 
-  // Set up repeating timers
-  setInterval(async () => {
-    await collectionRunner.fetchConfig(
+    const { collectionFile, envFile } = await collectionRunner.fetchConfig(
       environment.collectionUrl,
       environment.envUrl,
       environment.collectionFile,
       environment.envFile
     )
-  }, parseInt(environment.refreshInterval * 1000))
 
-  setInterval(() => {
+    logMessage(`Newman runner started & listening on ${environment.port}`)
+    logMessage(` - Metrics available for scraping at: http://0.0.0.0:${environment.port}${environment.metricsUrlPath}`)
+    if (environment.statusEnabled === 'true') {
+      logMessage(` - Status API endpoint: http://0.0.0.0:${environment.port}/status`)
+    }
+    logMessage(` - Collection will be run every ${environment.runInterval} seconds`)
+    logMessage(` - Config refresh will be run every ${environment.refreshInterval} seconds`)
+
     collectionRunner.runCollection(collectionFile, envFile, environment.runIterations, environment.enableBail)
-  }, parseInt(environment.runInterval * 1000))
+
+    // Set up repeating timers
+    setInterval(async () => {
+      await processOpenApiUrls()
+      await collectionRunner.fetchConfig(
+        environment.collectionUrl,
+        environment.envUrl,
+        environment.collectionFile,
+        environment.envFile
+      )
+    }, parseInt(environment.refreshInterval * 1000))
+
+    setInterval(() => {
+      collectionRunner.runCollection(collectionFile, envFile, environment.runIterations, environment.enableBail)
+    }, parseInt(environment.runInterval * 1000))
+  } catch (err) {
+    logMessage(`FATAL! Failed to start server: ${err.message}`)
+    process.exit(1)
+  }
 })

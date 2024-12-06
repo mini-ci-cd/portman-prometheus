@@ -15,15 +15,17 @@ class PortmanTransformation {
    * @param {string} openApiPath - Path to OpenAPI specification file
    * @param {Object} options - Portman configuration options
    */
-  async initialize() {
+  async initialize(openApiUrl) {
     try {
+      // Convert URL to filename-safe string for config
+      const configFileName = `${openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')}-portman.conf`
 
       // Initialize Portman with default options
       const defaultOptions = {
         output: './collection.json',
-        portmanConfigFile: './public-api-portman.conf',
+        portmanConfigFile: configFileName,
         envFile: './.env',
-        oaLocal: './public-api-openapi.json'
+        oaUrl: openApiUrl
       }
 
       this.portman = new Portman(defaultOptions)
