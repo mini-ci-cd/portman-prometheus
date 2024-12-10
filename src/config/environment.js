@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 /**
  * Environment configuration module
  * Loads and provides access to environment variables with defaults
