@@ -8,7 +8,8 @@ WORKDIR /runner
 COPY $srcDir/package*.json ./
 RUN npm install --production --silent
 
-COPY $srcDir/*.js ./
+COPY $srcDir/ ./
+RUN sed -i 's#"main": "lib/index.js",#"main": "dist/Portman.js",#' node_modules/@apideck/portman/package.json
 
 COPY ${collectionFile} ./collection.json
 
