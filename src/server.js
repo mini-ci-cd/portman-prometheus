@@ -53,8 +53,6 @@ async function processOpenApiUrls() {
   } else if (openApiFile) {
     // Process single OpenAPI file as before
     await portmanTransformation.initialize(openApiFile)
-    await portmanTransformation.generateCollection()
-    await portmanTransformation.saveCollection(environment.collectionFile)
   }
 }
 

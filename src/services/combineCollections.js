@@ -11,9 +11,9 @@ class CollectionCombiner {
    * Add a collection to be combined
    * @param {string} collectionPath - Path to collection file
    */
-  addCollection(url) {
+  addCollection(baseURLforFilename) {
     try {
-      const collectionPath = `${url.replace(/[^a-zA-Z0-9]/g, '_')}-collection.json`
+      const collectionPath = `${baseURLforFilename.replace(/[^a-zA-Z0-9]/g, '_')}-collection.json`
 
       if (!fs.existsSync(collectionPath)) {
         throw new Error(`Collection file not found at ${collectionPath}`)

@@ -18,14 +18,21 @@ class PortmanTransformation {
   async initialize(openApiUrl) {
     try {
       // Convert URL to filename-safe string for config
-      const configFileName = `${openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')}-portman.conf`
-      const outputFileName = `${openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')}-collection.json`
+      const safePrefix = openApiUrl.replace(/[^a-zA-Z0-9]/g, '_')
+      const configFileName = `./${safePrefix}-portman.conf`
+      const postmanConfigFileName = `./${safePrefix}-postman.conf`
+      const outputFileName = `./${safePrefix}-collection.json`
 
       // Initialize Portman with default options
       const defaultOptions = {
         output: outputFileName,
         portmanConfigFile: configFileName,
+        portmanConfigPath: configFileName,
+        postmanConfigFile: postmanConfigFileName,
+        postmanConfigPath: postmanConfigFileName,
+        includeTests: true,
         envFile: './.env',
+        filterFile: './portman-filter.json',
         oaUrl: openApiUrl
       }
 
